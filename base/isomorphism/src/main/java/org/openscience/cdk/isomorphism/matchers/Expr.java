@@ -41,7 +41,7 @@ import java.util.Deque;
 import java.util.Objects;
 
 /**
- * A expression stores a predicate tree for checking properties of atoms
+ * An expression stores a predicate tree for checking properties of atoms
  * and bonds.
  * <pre>
  * Expr expr = new Expr(ELEMENT, 6);
@@ -49,7 +49,7 @@ import java.util.Objects;
  *   // expression matches if atom is a carbon!
  * }
  * </pre>
- * An expression is composed of an {@link Type}, an optional 'value', and
+ * An expression is composed of a {@link Type}, an optional 'value', and
  * optionally one or more 'sub-expressions'. Each expr can either be a leaf or
  * an intermediate (logical) node. The simplest expression trees contain a
  * single leaf node:
@@ -65,7 +65,7 @@ import java.util.Objects;
  * Logical internal nodes combine one or two sub-expressions with conjunction
  * (and), disjunction (or), and negation (not).
  * <br>
- * Consider the following expression tree, is matches fluorine, chlorine, or
+ * Consider the following expression tree, it matches fluorine, chlorine, or
  * bromine.
  * <pre>
  *     OR
@@ -84,8 +84,8 @@ import java.util.Objects;
  * Expr leafF  = new Expr(ELEMENT, 9); // F
  * Expr leafCl = new Expr(ELEMENT, 17); // Cl
  * Expr leafBr = new Expr(ELEMENT, 35);  // Br
- * Expr node4  = new Expr(OR, leaf2, leaf3);
- * Expr node5  = new Expr(OR, leaf1, node4);
+ * Expr node4  = new Expr(OR, leafCl, leafBr);
+ * Expr node5  = new Expr(OR, leafF, node4);
  * </pre>
  *
  * Expressions can be used to match bonds. Note some expressions apply to either
@@ -254,7 +254,7 @@ public final class Expr {
                 return atom.getMassNumber() == null;
             case UNSATURATED:
                 for (IBond bond : atom.bonds())
-                    if (bond.getOrder() == IBond.Order.DOUBLE)
+                    if (bond.getOrder().numeric() >= 2)
                         return true;
                 return false;
             // value primitives
@@ -314,11 +314,10 @@ public final class Expr {
                     q += matches(Type.IS_HETERO, bond.getOther(atom), stereo) ? 1 : 0;
                 return q == value;
             case INSATURATION:
-                int db = 0;
+                int sat = 0;
                 for (IBond bond : atom.bonds())
-                    if (bond.getOrder() == IBond.Order.DOUBLE)
-                        db++;
-                return db == value;
+                    sat += Math.max(bond.getOrder().numeric() - 1, 0);
+                return sat == value;
             case HYBRIDISATION_NUMBER:
                 IAtomType.Hybridization hyb = atom.getHybridization();
                 if (hyb == null)

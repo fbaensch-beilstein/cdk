@@ -153,6 +153,14 @@ final class BeamToCDK {
                     checkBondStereo = true;
                     bond.setOrder(IBond.Order.SINGLE);
                     break;
+                case UP_AROMATIC:
+                case DOWN_AROMATIC:
+                    checkBondStereo = true;
+                    bond.setOrder(IBond.Order.SINGLE);
+                    bond.setIsAromatic(true);
+                    atoms[u].setIsAromatic(true);
+                    atoms[v].setIsAromatic(true);
+                    break;
                 case IMPLICIT:
                     bond.setOrder(IBond.Order.SINGLE);
                     if (!kekule && atoms[u].isAromatic() && atoms[v].isAromatic()) {
@@ -475,8 +483,9 @@ final class BeamToCDK {
 
     private IStereoElement newSquarePlanar(int u, int[] vs, IAtom[] atoms, Configuration c) {
 
-        if (vs.length != 4)
-            return null;
+        if (vs.length != 4) {
+            vs = insert(u, vs, 4);
+        }
 
         int order;
         switch (c) {
@@ -499,8 +508,9 @@ final class BeamToCDK {
     }
 
     private IStereoElement newTrigonalBipyramidal(int u, int[] vs, IAtom[] atoms, Configuration c) {
-        if (vs.length != 5)
-            return null;
+        if (vs.length != 5) {
+            vs = insert(u, vs, 5);
+        }
         int order = 1 + c.ordinal() - Configuration.TB1.ordinal();
         if (order < 1 || order > 20)
             return null;
@@ -510,8 +520,9 @@ final class BeamToCDK {
     }
 
     private IStereoElement newOctahedral(int u, int[] vs, IAtom[] atoms, Configuration c) {
-        if (vs.length != 6)
-            return null;
+        if (vs.length != 6) {
+            vs = insert(u, vs, 6);
+        }
         int order = 1 + c.ordinal() - Configuration.OH1.ordinal();
         if (order < 1 || order > 30)
             return null;
@@ -598,6 +609,18 @@ final class BeamToCDK {
             ws[i - 1] = tmp;
         }
 
+        return ws;
+    }
+
+    private static int[] insert(int v, int[] vs, int n2) {
+        int n = vs.length;
+        int[] ws = Arrays.copyOf(vs, n2);
+
+        for(int j = n; j < n2; ++j) {
+            ws[j] = v;
+        }
+
+        Arrays.sort(ws);
         return ws;
     }
 
